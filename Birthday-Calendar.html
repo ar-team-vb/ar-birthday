@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Accounts Receivable Team Birthday Calendar</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #2563eb; --primary-dark: #1d4ed8;
+      --accent: #f59e0b; --accent3: #ec4899; --danger: #ef4444;
+      --surface: #ffffff; --surface2: #f8fafc; --surface3: #f1f5f9;
+      --border: #e2e8f0; --text: #0f172a; --text2: #475569; --text3: #94a3b8;
+      --radius: 16px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+      --shadow:    0 4px 16px rgba(0,0,0,0.08);
+      --shadow-lg: 0 12px 40px rgba(0,0,0,0.14);
+      --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+    body { font-family: var(--font); background: var(--surface3); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+
+    /* HEADER */
+    header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 24px; height: 62px; display: flex; align-items: center; justify-content: space-between; gap: 16px; box-shadow: var(--shadow-sm); position: sticky; top: 0; z-index: 50; }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .logo-icon { width: 36px; height: 36px; background: linear-gradient(135deg, var(--primary), var(--accent3)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; box-shadow: 0 2px 8px rgba(37,99,235,0.3); }
+    header h1 { font-size: 1.05rem; font-weight: 700; color: var(--text); }
+    header h1 span { color: var(--primary); }
+    .header-center { display: flex; align-items: center; gap: 8px; background: var(--surface3); border-radius: 12px; padding: 5px 10px; border: 1px solid var(--border); }
+    .nav-arrow { width: 30px; height: 30px; border: none; background: var(--surface); border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; color: var(--text2); box-shadow: var(--shadow-sm); transition: all 0.18s; }
+    .nav-arrow:hover { background: var(--primary); color: white; }
+    #current-month-label { font-size: 0.92rem; font-weight: 700; color: var(--text); min-width: 155px; text-align: center; }
+    .header-right { display: flex; align-items: center; gap: 8px; }
+
+    /* BUTTONS */
+    .btn { padding: 8px 16px; border-radius: 9px; border: none; cursor: pointer; font-size: 0.83rem; font-weight: 600; font-family: var(--font); transition: all 0.18s; display: inline-flex; align-items: center; gap: 5px; }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary   { background: var(--primary); color: white; box-shadow: 0 2px 8px rgba(37,99,235,0.3); }
+    .btn-primary:hover   { background: var(--primary-dark); }
+    .btn-secondary { background: var(--surface3); color: var(--text2); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: var(--surface); color: var(--primary); border-color: var(--primary); }
+    .btn-ghost  { background: transparent; color: var(--text2); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: var(--surface3); }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-danger:hover { background: #dc2626; }
+
+    /* LAYOUT */
+    .app-body { display: flex; flex: 1; overflow: hidden; height: calc(100vh - 62px); }
+
+    /* SIDEBAR */
+    aside { width: 252px; min-width: 210px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+    .sidebar-section { padding: 14px; border-bottom: 1px solid var(--border); }
+    .sidebar-title { font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text3); margin-bottom: 8px; }
+    .search-wrap { position: relative; }
+    .search-icon { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); font-size: 0.78rem; color: var(--text3); pointer-events: none; }
+    .search-box { width: 100%; padding: 8px 10px 8px 30px; border: 1.5px solid var(--border); border-radius: 9px; font-size: 0.82rem; color: var(--text); background: var(--surface3); outline: none; font-family: var(--font); transition: border-color 0.2s; }
+    .search-box:focus { border-color: var(--primary); background: var(--surface); }
+    .all-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; cursor: pointer; margin-bottom: 4px; transition: all 0.18s; }
+    .all-item:hover    { background: var(--surface3); }
+    .all-item.selected { background: #eff6ff; border-left: 3px solid var(--primary); padding-left: 7px; }
+    .all-badge { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg,#667eea,#764ba2); display: flex; align-items: center; justify-content: center; font-size: 0.58rem; font-weight: 800; color: white; letter-spacing: 0.04em; flex-shrink: 0; }
+    .all-item-text .name { font-size: 0.85rem; font-weight: 600; color: var(--text); }
+    .all-item-text .sub  { font-size: 0.7rem; color: var(--text3); }
+    .member-scroll { flex: 1; overflow-y: auto; padding: 6px; }
+    .member-item { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 10px; cursor: pointer; transition: all 0.18s; margin-bottom: 2px; position: relative; }
+    .member-item:hover    { background: var(--surface3); }
+    .member-item.selected { background: #eff6ff; border-left: 3px solid var(--primary); padding-left: 7px; }
+    .avatar-sm { width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 0.68rem; font-weight: 700; color: white; flex-shrink: 0; overflow: hidden; position: relative; }
+    .avatar-sm img { width:100%;height:100%;object-fit:cover;position:absolute;inset:0;border-radius:9px; }
+    .member-info { flex: 1; min-width: 0; }
+    .member-info .name { font-size: 0.82rem; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .member-info .bday { font-size: 0.68rem; color: var(--text3); }
+    .member-info .bday.soon { color: var(--accent); font-weight: 600; }
+    .upcoming-badge { font-size: 0.6rem; background: linear-gradient(135deg,var(--accent),#f97316); color: white; padding: 2px 6px; border-radius: 20px; font-weight: 700; white-space: nowrap; }
+    .reminders-wrap { padding: 10px 12px; border-top: 1px solid var(--border); background: var(--surface2); max-height: 190px; overflow-y: auto; }
+    .reminder-item { display: flex; align-items: flex-start; gap: 8px; padding: 7px 8px; border-radius: 8px; background: var(--surface); border: 1px solid var(--border); margin-bottom: 5px; font-size: 0.74rem; }
+    .reminder-item:last-child { margin-bottom: 0; }
+    .reminder-text { flex: 1; color: var(--text); line-height: 1.3; }
+    .reminder-text strong { display: block; font-size: 0.76rem; }
+    .reminder-text span   { color: var(--text3); font-size: 0.68rem; }
+    .reminder-del { cursor: pointer; color: var(--text3); font-size: 0.78rem; transition: color 0.2s; }
+    .reminder-del:hover { color: var(--danger); }
+    .no-reminders { font-size: 0.76rem; color: var(--text3); text-align: center; padding: 6px 0; }
+
+    /* MAIN */
+    main { flex: 1; padding: 18px 22px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+    .stats-bar { display: flex; gap: 10px; flex-wrap: wrap; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px 16px; display: flex; align-items: center; gap: 10px; box-shadow: var(--shadow-sm); flex: 1; min-width: 120px; }
+    .stat-icon { font-size: 1.3rem; }
+    .stat-text .sv { font-size: 1rem; font-weight: 700; color: var(--text); }
+    .stat-text .sl { font-size: 0.68rem; color: var(--text3); }
+
+    /* TEAM BAR */
+    .team-bar { background: var(--surface); border-radius: var(--radius); padding: 12px 16px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); display: flex; align-items: center; gap: 10px; overflow-x: auto; }
+    .team-bar::-webkit-scrollbar { height: 4px; }
+    .team-bar-label { font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text3); white-space: nowrap; margin-right: 4px; }
+    .ta-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; flex-shrink: 0; position: relative; }
+    .ta-avatar { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 0.74rem; font-weight: 700; color: white; overflow: hidden; position: relative; border: 2.5px solid transparent; transition: all 0.2s; }
+    .ta-avatar img { width:100%;height:100%;object-fit:cover;position:absolute;inset:0;border-radius:9px; }
+    .ta-wrap:hover .ta-avatar { transform: translateY(-3px); box-shadow: var(--shadow); }
+    .ta-wrap.selected .ta-avatar { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37,99,235,0.18); }
+    .ta-name { font-size: 0.58rem; font-weight: 600; color: var(--text2); max-width: 48px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ta-wrap.selected .ta-name { color: var(--primary); }
+    .ta-bday-dot { position: absolute; top: -4px; right: -4px; width: 15px; height: 15px; background: linear-gradient(135deg,var(--accent),#f97316); border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 7px; z-index: 2; }
+    .ta-cam-badge { position: absolute; bottom: -4px; right: -4px; width: 15px; height: 15px; background: var(--primary); border-radius: 50%; border: 2px solid white; display: flex; align-items: center; justify-content: center; font-size: 7px; z-index: 2; opacity: 0; transition: opacity 0.2s; }
+    .ta-wrap:hover .ta-cam-badge { opacity: 1; }
+
+    /* CALENDAR */
+    .calendar-wrap { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow-sm); border: 1px solid var(--border); overflow: hidden; }
+    .cal-header-row { display: grid; grid-template-columns: repeat(7,1fr); background: var(--surface3); border-bottom: 1px solid var(--border); }
+    .cal-header-row div { text-align: center; padding: 10px 4px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; color: var(--text3); text-transform: uppercase; }
+    .cal-header-row div:nth-child(6), .cal-header-row div:nth-child(7) { color: var(--accent3); }
+    .cal-body { display: grid; grid-template-columns: repeat(7,1fr); }
+    .cal-cell { min-height: 100px; border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 7px 5px 5px 8px; display: flex; flex-direction: column; gap: 3px; cursor: pointer; transition: background 0.14s; position: relative; }
+    .cal-cell:hover { background: #f8faff; }
+    .cal-cell:nth-child(7n) { border-right: none; }
+    .cal-cell.other-month   { background: var(--surface3); opacity: 0.55; }
+    .cal-cell.today         { background: #eff6ff; }
+    .cal-cell.birthday-cell { background: linear-gradient(135deg,#fffbeb,#fef9ee); }
+    .cal-cell.birthday-cell:hover { background: linear-gradient(135deg,#fef3c7,#fde68a22); }
+    .day-num { font-size: 0.8rem; font-weight: 700; color: var(--text); margin-bottom: 2px; display: flex; }
+    .day-num-inner { width: 24px; height: 24px; border-radius: 7px; display: flex; align-items: center; justify-content: center; }
+    .today .day-num-inner { background: var(--primary); color: white; }
+    .cal-cell:nth-child(7n-1) .day-num, .cal-cell:nth-child(7n) .day-num { color: var(--accent3); }
+    .event-pill { font-size: 0.67rem; font-weight: 600; border-radius: 6px; padding: 3px 6px; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; display: flex; align-items: center; gap: 3px; box-shadow: 0 1px 3px rgba(0,0,0,0.12); transition: opacity 0.14s, transform 0.14s; }
+    .event-pill:hover { opacity: 0.88; transform: translateX(2px); }
+    .birthday-pill { background: linear-gradient(135deg,var(--accent),#f97316) !important; }
+
+    /* BIRTHDAY CARDS */
+    .bday-cards-section { display: flex; flex-direction: column; gap: 10px; }
+    .bday-cards-header { display: flex; align-items: center; justify-content: space-between; }
+    .bday-cards-title { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text3); display: flex; align-items: center; gap: 6px; }
+    .bday-cards-count { background: linear-gradient(135deg,var(--accent),#f97316); color: white; font-size: 0.68rem; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
+    .bday-cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+    .bday-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 18px 14px 14px; display: flex; flex-direction: column; align-items: center; gap: 10px; box-shadow: var(--shadow-sm); cursor: pointer; transition: all 0.22s; position: relative; overflow: hidden; text-align: center; }
+    .bday-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg,var(--accent),#f97316); border-radius: 16px 16px 0 0; }
+    .bday-card:hover { transform: translateY(-4px); box-shadow: var(--shadow); border-color: #fde68a; }
+    .bday-card.is-today::before { background: linear-gradient(90deg,#ec4899,#f43f5e); height: 5px; }
+    .bday-card.is-today { border-color: #fce7f3; background: linear-gradient(180deg,#fff0f8,#ffffff); box-shadow: 0 4px 20px rgba(236,72,153,0.15); animation: pulse-card 2s infinite; }
+    @keyframes pulse-card { 0%,100% { box-shadow: 0 4px 20px rgba(236,72,153,0.15); } 50% { box-shadow: 0 4px 28px rgba(236,72,153,0.35); } }
+    .bday-card.is-soon::before { background: linear-gradient(90deg,#f59e0b,#fbbf24); }
+    .bday-card.is-soon { border-color: #fef3c7; }
+    .bday-card-avatar { width: 72px; height: 72px; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 700; color: white; overflow: hidden; position: relative; box-shadow: 0 4px 14px rgba(0,0,0,0.15); flex-shrink: 0; }
+    .bday-card-avatar img { width:100%;height:100%;object-fit:cover;position:absolute;inset:0;border-radius:18px; }
+    .bday-card-today-badge { position: absolute; top: 8px; right: 8px; background: linear-gradient(135deg,#ec4899,#f43f5e); color: white; font-size: 0.6rem; font-weight: 800; padding: 3px 7px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.05em; box-shadow: 0 2px 8px rgba(236,72,153,0.4); }
+    .bday-card-name { font-size: 0.84rem; font-weight: 700; color: var(--text); line-height: 1.2; }
+    .bday-card-date { font-size: 0.8rem; font-weight: 600; color: var(--text2); display: flex; align-items: center; gap: 4px; }
+    .bday-card-countdown { font-size: 0.72rem; font-weight: 700; padding: 4px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 4px; }
+    .bday-card-countdown.today-cd  { background: linear-gradient(135deg,#ec4899,#f43f5e); color: white; }
+    .bday-card-countdown.soon-cd   { background: linear-gradient(135deg,#fef3c7,#fde68a); color: #92400e; }
+    .bday-card-countdown.normal-cd { background: var(--surface3); color: var(--text2); }
+    .bday-card-age { font-size: 0.68rem; color: var(--text3); }
+    .bday-cards-empty { background: var(--surface); border: 1px dashed var(--border); border-radius: 16px; padding: 32px 20px; text-align: center; color: var(--text3); font-size: 0.85rem; grid-column: 1 / -1; }
+    .bday-cards-empty .empty-icon { font-size: 2.5rem; margin-bottom: 8px; }
+
+    /* MODAL */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.45); z-index: 200; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+    .modal-overlay.open { display: flex; }
+    @keyframes slideUp { from { transform: translateY(22px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .modal { background: var(--surface); border-radius: 20px; padding: 26px 24px; width: 440px; max-width: 95vw; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); display: flex; flex-direction: column; gap: 14px; animation: slideUp 0.25s ease; }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; }
+    .modal-title  { font-size: 1.05rem; font-weight: 700; color: var(--text); }
+    .modal-close  { width: 30px; height: 30px; border: none; background: var(--surface3); border-radius: 8px; cursor: pointer; font-size: 0.9rem; color: var(--text2); display: flex; align-items: center; justify-content: center; transition: all 0.18s; }
+    .modal-close:hover { background: var(--danger); color: white; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-label  { font-size: 0.77rem; font-weight: 600; color: var(--text2); }
+    .modal input[type="text"], .modal input[type="date"], .modal input[type="time"], .modal select, .modal textarea { width: 100%; padding: 9px 12px; border: 1.5px solid var(--border); border-radius: 9px; font-size: 0.85rem; color: var(--text); outline: none; background: var(--surface3); transition: all 0.2s; font-family: var(--font); resize: vertical; }
+    .modal input:focus, .modal select:focus, .modal textarea:focus { border-color: var(--primary); background: var(--surface); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+    .form-row { display: flex; gap: 10px; }
+    .form-row .form-group { flex: 1; }
+    .divider { height: 1px; background: var(--border); }
+    .reminder-toggle { display: flex; align-items: center; gap: 10px; padding: 10px 13px; background: var(--surface3); border-radius: 10px; border: 1.5px solid var(--border); cursor: pointer; transition: all 0.18s; }
+    .reminder-toggle:hover { border-color: var(--primary); background: #eff6ff; }
+    .reminder-toggle input[type="checkbox"] { accent-color: var(--primary); width: 15px; height: 15px; cursor: pointer; }
+    .reminder-toggle span { font-size: 0.85rem; font-weight: 600; color: var(--text); }
+    .reminder-fields { display: flex; flex-direction: column; gap: 11px; padding: 13px; background: var(--surface3); border-radius: 10px; border: 1px solid var(--border); }
+    .modal-actions { display: flex; gap: 9px; justify-content: flex-end; margin-top: 2px; }
+
+    /* BIRTHDAY POPUP */
+    .bday-popup { position: fixed; z-index: 499; background: white; border-radius: 18px; box-shadow: var(--shadow-lg); padding: 18px 20px; width: 272px; border: 1px solid var(--border); animation: popIn 0.22s cubic-bezier(0.34,1.56,0.64,1); }
+    @keyframes popIn { from { transform: scale(0.82); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .bday-popup-header { display: flex; align-items: center; gap: 12px; margin-bottom: 13px; }
+    .bday-popup-avatar { width: 48px; height: 48px; border-radius: 13px; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; font-weight: 700; color: white; flex-shrink: 0; overflow: hidden; position: relative; }
+    .bday-popup-avatar img { width:100%;height:100%;object-fit:cover;position:absolute;inset:0;border-radius:13px; }
+    .bday-popup-info .pname { font-size: 0.92rem; font-weight: 700; color: var(--text); }
+    .bday-popup-info .prole { font-size: 0.71rem; color: var(--text3); margin-top: 2px; }
+    .bday-info-card { background: linear-gradient(135deg,#fffbeb,#fef3c7); border: 1px solid #fde68a; border-radius: 12px; padding: 11px 13px; display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .bday-info-card .cake { font-size: 1.35rem; }
+    .bday-info-card .bday-date { font-size: 0.88rem; font-weight: 700; color: var(--text); }
+    .bday-info-card .bday-age  { font-size: 0.72rem; color: var(--text2); margin-top: 2px; }
+    .bday-info-card .bday-countdown { font-size: 0.7rem; color: var(--accent); font-weight: 600; margin-top: 2px; }
+    .bday-popup-actions { display: flex; gap: 6px; margin-top: 12px; }
+    .bday-popup-actions .btn { flex: 1; padding: 7px 8px; font-size: 0.76rem; justify-content: center; }
+
+    /* PHOTO MODAL */
+    .photo-upload-area { border: 2px dashed var(--border); border-radius: 12px; padding: 22px; text-align: center; cursor: pointer; transition: all 0.2s; position: relative; }
+    .photo-upload-area:hover { border-color: var(--primary); background: #eff6ff; }
+    .photo-upload-area input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .photo-preview { width: 80px; height: 80px; border-radius: 14px; object-fit: cover; border: 3px solid var(--primary); display: none; margin: 0 auto 10px; }
+    .photo-upload-text { font-size: 0.8rem; color: var(--text3); }
+
+    /* TOAST */
+    #toast-container { position: fixed; bottom: 22px; right: 22px; z-index: 9999; display: flex; flex-direction: column; gap: 9px; }
+    .toast { background: var(--text); color: white; padding: 12px 16px; border-radius: 13px; font-size: 0.83rem; box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 9px; animation: toastIn 0.28s cubic-bezier(0.34,1.56,0.64,1); max-width: 310px; }
+    .toast.success { background: #059669; }
+    .toast.info    { background: var(--primary); }
+    .toast .t-icon { font-size: 1rem; flex-shrink: 0; }
+    .toast .t-body { flex: 1; line-height: 1.4; }
+    .toast .t-close { cursor: pointer; opacity: 0.55; transition: opacity 0.2s; flex-shrink: 0; }
+    .toast .t-close:hover { opacity: 1; }
+    @keyframes toastIn { from { transform: translateX(55px) scale(0.9); opacity: 0; } to { transform: translateX(0) scale(1); opacity: 1; } }
+
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 6px; }
+    @media (max-width: 860px) { aside { display: none; } main { padding: 12px; } .cal-cell { min-height: 72px; } .bday-cards-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); } }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="logo-icon">🎂</div>
+    <h1>Accounts Receivable <span>Birthday Calendar</span></h1>
+  </div>
+  <div class="header-center">
+    <button class="nav-arrow" onclick="changeMonth(-1)">◀</button>
+    <span id="current-month-label"></span>
+    <button class="nav-arrow" onclick="changeMonth(1)">▶</button>
+  </div>
+  <div class="header-right">
+    <button class="btn btn-secondary" onclick="goToday()">📍 Today</button>
+    <button class="btn btn-primary"   onclick="openEventModal(null)">＋ Add Birthday</button>
+  </div>
+</header>
+
+<div class="app-body">
+  <aside>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Search</div>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input class="search-box" id="search-input" placeholder="Find a member…" oninput="renderSidebar()" />
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">👥 Team Members</div>
+      <div class="all-item" id="all-item" onclick="selectAll()">
+        <div class="all-badge">ALL</div>
+        <div class="all-item-text">
+          <div class="name">All Members</div>
+          <div class="sub" id="all-sub"></div>
+        </div>
+      </div>
+    </div>
+    <div class="member-scroll" id="member-list"></div>
+    <div class="reminders-wrap">
+      <div class="sidebar-title">🔔 Reminders</div>
+      <div id="reminder-list"></div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="stats-bar"  id="stats-bar"></div>
+    <div class="team-bar"   id="team-bar"></div>
+    <div class="calendar-wrap">
+      <div class="cal-header-row" id="cal-header"></div>
+      <div class="cal-body"       id="cal-body"></div>
+    </div>
+    <div class="bday-cards-section" id="bday-cards-section"></div>
+  </main>
+</div>
+
+<!-- EVENT MODAL -->
+<div class="modal-overlay" id="event-modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="event-modal-title">Add Birthday</span>
+      <button class="modal-close" onclick="closeEventModal()">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Title</label>
+      <input type="text" id="evt-title" placeholder="e.g. Anna's Birthday 🎂" />
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Date</label><input type="date" id="evt-date" /></div>
+      <div class="form-group"><label class="form-label">Time (optional)</label><input type="time" id="evt-time" /></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Team Member</label>
+      <select id="evt-member"></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes (optional)</label>
+      <textarea id="evt-notes" rows="2" placeholder="Any details…"></textarea>
+    </div>
+    <div class="divider"></div>
+    <label class="reminder-toggle" onclick="toggleReminderFields()">
+      <input type="checkbox" id="evt-reminder-check" /><span>🔔</span><span>Set a Reminder</span>
+    </label>
+    <div class="reminder-fields" id="reminder-fields" style="display:none;">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Remind on Date</label><input type="date" id="rem-date" /></div>
+        <div class="form-group"><label class="form-label">At Time</label><input type="time" id="rem-time" value="09:00" /></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Message</label>
+        <input type="text" id="rem-message" placeholder="e.g. Prepare birthday card! 🎂" />
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-danger"  id="evt-delete-btn" style="display:none;margin-right:auto" onclick="deleteEvent()">🗑 Delete</button>
+      <button class="btn btn-ghost"   onclick="closeEventModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEvent()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- PHOTO MODAL -->
+<div class="modal-overlay" id="photo-modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="photo-modal-title">Upload Photo</span>
+      <button class="modal-close" onclick="closePhotoModal()">✕</button>
+    </div>
+    <p style="font-size:0.81rem;color:var(--text3);">Click below or drag & drop to set this member's photo.</p>
+    <div class="photo-upload-area">
+      <input type="file" id="photo-file-input" accept="image/*" onchange="handlePhotoUpload(event)" />
+      <img id="photo-preview" class="photo-preview" src="" alt="preview" />
+      <div class="photo-upload-text" id="upload-text">📷 Click to select a photo</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-danger"  id="remove-photo-btn" onclick="removePhoto()" style="display:none;margin-right:auto">🗑 Remove</button>
+      <button class="btn btn-ghost"   onclick="closePhotoModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="savePhoto()">Save Photo</button>
+    </div>
+  </div>
+</div>
+
+<!-- BIRTHDAY POPUP -->
+<div id="bday-popup"     style="display:none;"></div>
+<div id="popup-backdrop" style="display:none;position:fixed;inset:0;z-index:498;" onclick="closeBdayPopup()"></div>
+<div id="toast-container"></div>
+
+<script>
+const MEMBERS = [
+  { id:1,  name:"Anna-Maria Hristova",  initials:"AH", birthdayDay:19, birthdayMonth:8,  birthYear:2003 },
+  { id:2,  name:"Daniela Koleva",       initials:"DK", birthdayDay:18, birthdayMonth:11, birthYear:1993 },
+  { id:3,  name:"Desislav Valev",       initials:"DV", birthdayDay:31, birthdayMonth:5,  birthYear:1995 },
+  { id:4,  name:"Desislava Chakarova",  initials:"DC", birthdayDay:28, birthdayMonth:7,  birthYear:2004 },
+  { id:5,  name:"Elitsa Stefanova",     initials:"ES", birthdayDay:9,  birthdayMonth:12, birthYear:1972 },
+  { id:6,  name:"Ivelina Dimitrova",    initials:"ID", birthdayDay:2,  birthdayMonth:9,  birthYear:1993 },
+  { id:7,  name:"Karina Tsvyatkova",    initials:"KT", birthdayDay:11, birthdayMonth:1,  birthYear:2003 },
+  { id:8,  name:"Krist-Koyu Ngue",      initials:"KN", birthdayDay:3,  birthdayMonth:6,  birthYear:1990 },
+  { id:9,  name:"Mirena Ivanova",       initials:"MI", birthdayDay:4,  birthdayMonth:2,  birthYear:1996 },
+  { id:10, name:"Mikhail Tsarov",       initials:"MT", birthdayDay:11, birthdayMonth:9,  birthYear:2002 },
+  { id:11, name:"Nikol Velkova",        initials:"NV", birthdayDay:24, birthdayMonth:7,  birthYear:2000 },
+  { id:12, name:"Petinka Ivanova",      initials:"PI", birthdayDay:30, birthdayMonth:7,  birthYear:1993 },
+  { id:13, name:"Petar Ivanov",         initials:"PE", birthdayDay:14, birthdayMonth:8,  birthYear:1988 },
+  { id:14, name:"Petya Kirilova",       initials:"PK", birthdayDay:24, birthdayMonth:9,  birthYear:1979 },
+  { id:15, name:"Radoslav Tsankov",     initials:"RT", birthdayDay:16, birthdayMonth:9,  birthYear:1961 },
+  { id:16, name:"Silviya Zabcheva",     initials:"SZ", birthdayDay:28, birthdayMonth:10, birthYear:1971 },
+  { id:17, name:"Sofia Meteva",         initials:"SM", birthdayDay:1,  birthdayMonth:9,  birthYear:1975 },
+  { id:18, name:"Stanislav Kochev",     initials:"SK", birthdayDay:10, birthdayMonth:6,  birthYear:1998 },
+  { id:19, name:"Stanislava Spasova",   initials:"SS", birthdayDay:9,  birthdayMonth:6,  birthYear:1988 },
+  { id:20, name:"Suzet Jones",          initials:"SJ", birthdayDay:26, birthdayMonth:10, birthYear:1972 },
+  { id:21, name:"Hristina Dobreva",     initials:"HD", birthdayDay:25, birthdayMonth:10, birthYear:1975 },
+];
+
+const GRADIENTS = [
+  "linear-gradient(135deg,#667eea,#764ba2)","linear-gradient(135deg,#f093fb,#f5576c)",
+  "linear-gradient(135deg,#4facfe,#00f2fe)","linear-gradient(135deg,#43e97b,#38f9d7)",
+  "linear-gradient(135deg,#fa709a,#fee140)","linear-gradient(135deg,#a18cd1,#fbc2eb)",
+  "linear-gradient(135deg,#fd7043,#ff8a65)","linear-gradient(135deg,#26d0ce,#1a2980)",
+  "linear-gradient(135deg,#a1c4fd,#c2e9fb)","linear-gradient(135deg,#d4fc79,#96e6a1)",
+  "linear-gradient(135deg,#fddb92,#d1fdff)","linear-gradient(135deg,#30cfd0,#330867)",
+  "linear-gradient(135deg,#f6d365,#fda085)","linear-gradient(135deg,#89f7fe,#66a6ff)",
+  "linear-gradient(135deg,#cd9cf2,#f6f3ff)","linear-gradient(135deg,#b721ff,#21d4fd)",
+  "linear-gradient(135deg,#08aeea,#2af598)","linear-gradient(135deg,#f83600,#f9d423)",
+  "linear-gradient(135deg,#6a11cb,#2575fc)","linear-gradient(135deg,#c471ed,#f64f59)",
+  "linear-gradient(135deg,#11998e,#38ef7d)",
+];
+
+function memberGradient(id){ return GRADIENTS[(id-1)%GRADIENTS.length]; }
+
+const MONTH_NAMES=["January","February","March","April","May","June","July","August","September","October","November","December"];
+const MONTH_SHORT=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const DAY_NAMES  =["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+
+// Storage
+const LS={EVENTS:'vbar_ev5',REMINDERS:'vbar_rem5',PHOTOS:'vbar_ph5',NEXTID:'vbar_nid5',REMID:'vbar_rid5',FIRED:'vbar_frd5'};
+function ls_get(k,def){ try{ return JSON.parse(localStorage.getItem(k))??def; }catch{ return def; } }
+function ls_set(k,v)  { localStorage.setItem(k,JSON.stringify(v)); }
+
+let events   =ls_get(LS.EVENTS,[]);
+let reminders=ls_get(LS.REMINDERS,[]);
+let photos   =ls_get(LS.PHOTOS,{});
+function getNextEventId(){ return parseInt(localStorage.getItem(LS.NEXTID)||'1'); }
+function setNextEventId(n){ localStorage.setItem(LS.NEXTID,String(n)); }
+function getNextRemId()  { return parseInt(localStorage.getItem(LS.REMID)||'1'); }
+function setNextRemId(n) { localStorage.setItem(LS.REMID,String(n)); }
+
+let currentDate   =new Date();
+let selectedMember=null;
+let editingEventId=null;
+let photoTargetId =null;
+let pendingPhoto  =null;
+
+// UTILS
+function formatDate(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function todayStr()    { return formatDate(new Date()); }
+function todayMidnight(){ const n=new Date(); return new Date(n.getFullYear(),n.getMonth(),n.getDate()); }
+
+function birthdayCountdown(m){
+  if(!m.birthdayMonth) return null;
+  const today=todayMidnight(), thisY=today.getFullYear();
+  let bday=new Date(thisY,m.birthdayMonth-1,m.birthdayDay);
+  if(bday<today) bday=new Date(thisY+1,m.birthdayMonth-1,m.birthdayDay);
+  const diff=Math.round((bday-today)/86400000);
+  if(diff===0) return "🎉 Today!";
+  if(diff===1) return "🎁 Tomorrow!";
+  if(diff<=7)  return `🎂 in ${diff} days`;
+  if(diff<=30) return `in ${diff} days`;
+  return `${MONTH_SHORT[m.birthdayMonth-1]} ${m.birthdayDay}`;
+}
+function birthdayDateStr(m){ return m.birthdayMonth?`${MONTH_SHORT[m.birthdayMonth-1]} ${m.birthdayDay}`:null; }
+function nextBirthdayAge(m){
+  if(!m.birthYear) return null;
+  const today=todayMidnight(), thisY=today.getFullYear();
+  const bday=new Date(thisY,m.birthdayMonth-1,m.birthdayDay);
+  return bday>=today?thisY-m.birthYear:thisY+1-m.birthYear;
+}
+function isBirthdayUrgent(m){
+  const cd=birthdayCountdown(m);
+  return cd&&(cd.includes('Today')||cd.includes('Tomorrow')||(cd.includes('in')&&parseInt(cd.match(/\d+/)?.[0]||'99')<=7));
+}
+function isBirthdayToday(m){ const t=todayMidnight(); return m.birthdayMonth===t.getMonth()+1&&m.birthdayDay===t.getDate(); }
+
+function buildAvatar(member,size,radius){
+  const div=document.createElement('div');
+  div.style.cssText=`width:${size}px;height:${size}px;border-radius:${radius};background:${memberGradient(member.id)};display:flex;align-items:center;justify-content:center;font-size:${Math.floor(size*0.33)}px;font-weight:700;color:white;flex-shrink:0;overflow:hidden;position:relative;`;
+  if(photos[member.id]){ const img=document.createElement('img'); img.src=photos[member.id]; img.style.cssText=`width:100%;height:100%;object-fit:cover;position:absolute;inset:0;border-radius:${radius};`; div.appendChild(img); }
+  else { div.textContent=member.initials; }
+  return div;
+}
+
+// STATS
+function renderStats(){
+  const bar=document.getElementById('stats-bar');
+  const visEvents     =selectedMember?events.filter(e=>e.memberId===selectedMember).length:events.length;
+  const urgentBdays   =MEMBERS.filter(m=>isBirthdayUrgent(m)).length;
+  const thisMonthBdays=MEMBERS.filter(m=>m.birthdayMonth===currentDate.getMonth()+1).length;
+  bar.innerHTML=`
+    <div class="stat-card"><span class="stat-icon">🎂</span><div class="stat-text"><div class="sv">${visEvents}</div><div class="sl">Birthday events</div></div></div>
+    <div class="stat-card"><span class="stat-icon">📅</span><div class="stat-text"><div class="sv">${thisMonthBdays}</div><div class="sl">Birthdays in ${MONTH_NAMES[currentDate.getMonth()]}</div></div></div>
+    <div class="stat-card"><span class="stat-icon">⚡</span><div class="stat-text"><div class="sv">${urgentBdays}</div><div class="sl">Coming up (≤7 days)</div></div></div>
+    <div class="stat-card"><span class="stat-icon">👥</span><div class="stat-text"><div class="sv">${MEMBERS.length}</div><div class="sl">Team members</div></div></div>`;
+}
+
+// BIRTHDAY CARDS
+function renderBirthdayCards(){
+  const section=document.getElementById('bday-cards-section');
+  const viewMonth=currentDate.getMonth()+1;
+  let pool=MEMBERS.filter(m=>m.birthdayMonth===viewMonth);
+  if(selectedMember!==null) pool=pool.filter(m=>m.id===selectedMember);
+  pool.sort((a,b)=>a.birthdayDay-b.birthdayDay);
+  const monthLabel=MONTH_NAMES[currentDate.getMonth()];
+  section.innerHTML=`<div class="bday-cards-header"><div class="bday-cards-title">🎂 Birthdays in ${monthLabel}<span class="bday-cards-count">${pool.length}</span></div></div><div class="bday-cards-grid" id="bday-cards-grid"></div>`;
+  const grid=document.getElementById('bday-cards-grid');
+  if(pool.length===0){
+    grid.innerHTML=`<div class="bday-cards-empty"><div class="empty-icon">🎈</div>No birthdays in ${monthLabel}${selectedMember?' for this member':''}.<br/><span style="font-size:0.76rem;color:var(--text3);margin-top:4px;display:block;">Navigate to another month to see birthdays.</span></div>`;
+    return;
+  }
+  pool.forEach(m=>{
+    const cd=birthdayCountdown(m), age=nextBirthdayAge(m);
+    const isToday=isBirthdayToday(m), isUrgent=isBirthdayUrgent(m);
+    const cdClass=isToday?'today-cd':isUrgent?'soon-cd':'normal-cd';
+    const card=document.createElement('div');
+    card.className='bday-card'+(isToday?' is-today':isUrgent?' is-soon':'');
+    card.onclick=()=>openBdayPopupAtEl(m,card);
+
+    const avWrap=document.createElement('div'); avWrap.className='bday-card-avatar'; avWrap.style.background=memberGradient(m.id);
+    if(photos[m.id]){ const img=document.createElement('img'); img.src=photos[m.id]; img.style.cssText='width:100%;height:100%;object-fit:cover;position:absolute;inset:0;border-radius:18px;'; avWrap.appendChild(img); }
+    else { avWrap.textContent=m.initials; }
+    card.appendChild(avWrap);
+
+    if(isToday){ const badge=document.createElement('div'); badge.className='bday-card-today-badge'; badge.textContent='🎉 Today!'; card.appendChild(badge); }
+
+    const nameDiv=document.createElement('div'); nameDiv.className='bday-card-name'; nameDiv.textContent=m.name; card.appendChild(nameDiv);
+    const dateDiv=document.createElement('div'); dateDiv.className='bday-card-date'; dateDiv.innerHTML=`📅 ${MONTH_SHORT[m.birthdayMonth-1]} ${m.birthdayDay}`; card.appendChild(dateDiv);
+    if(age){ const ageDiv=document.createElement('div'); ageDiv.className='bday-card-age'; ageDiv.textContent=isToday?`Turning ${age} today! 🎊`:`Turns ${age}`; card.appendChild(ageDiv); }
+    if(cd){ const cdDiv=document.createElement('div'); cdDiv.className=`bday-card-countdown ${cdClass}`; cdDiv.textContent=cd; card.appendChild(cdDiv); }
+    grid.appendChild(card);
+  });
+}
+
+// TEAM BAR
+function renderTeamBar(){
+  const bar=document.getElementById('team-bar');
+  bar.innerHTML='<span class="team-bar-label">Team</span>';
+
+  const allW=document.createElement('div');
+  allW.className='ta-wrap'+(selectedMember===null?' selected':'');
+  allW.innerHTML=`<div class="ta-avatar" style="background:linear-gradient(135deg,#667eea,#764ba2);font-size:0.55rem;font-weight:800;border-radius:12px;">ALL</div><div class="ta-name">All</div>`;
+  allW.onclick=()=>{ selectedMember=null; currentDate=new Date(); renderAll(); };
+  bar.appendChild(allW);
+
+  MEMBERS.forEach(m=>{
+    const wrap=document.createElement('div');
+    wrap.className='ta-wrap'+(selectedMember===m.id?' selected':'');
+    wrap.title=`${m.name} — click to jump to birthday · double-click to upload photo`;
+
+    const av=document.createElement('div'); av.className='ta-avatar'; av.style.background=memberGradient(m.id);
+    if(photos[m.id]){ const img=document.createElement('img'); img.src=photos[m.id]; av.appendChild(img); }
+    else { av.textContent=m.initials; av.style.fontSize='0.68rem'; }
+
+    if(isBirthdayUrgent(m)){
+      const dot=document.createElement('div');
+      dot.className='ta-bday-dot'; dot.textContent='🎂'; dot.title=birthdayCountdown(m);
+      wrap.appendChild(dot);
+    }
+
+    const cam=document.createElement('div'); cam.className='ta-cam-badge'; cam.textContent='📷';
+    wrap.appendChild(av); wrap.appendChild(cam);
+
+    const nameEl=document.createElement('div'); nameEl.className='ta-name'; nameEl.textContent=m.name.split(' ')[0];
+    wrap.appendChild(nameEl);
+
+    wrap.addEventListener('click', ()=>{
+      selectedMember = (selectedMember === m.id) ? null : m.id;
+      if(selectedMember !== null && m.birthdayMonth){
+        const now = new Date();
+        const targetYear = (m.birthdayMonth < now.getMonth()+1) ? now.getFullYear()+1 : now.getFullYear();
+        currentDate = new Date(targetYear, m.birthdayMonth-1, 1);
+      }
+      renderAll();
+      if(selectedMember !== null && m.birthdayMonth){
+        setTimeout(()=> highlightBirthdayCell(m), 80);
+      }
+    });
+
+    wrap.addEventListener('dblclick', e=>{ e.stopPropagation(); openPhotoModal(m.id); });
+    bar.appendChild(wrap);
+  });
+}
+
+function highlightBirthdayCell(member){
+  const cells = document.querySelectorAll('.cal-cell.birthday-cell');
+  let targetCell = null;
+  cells.forEach(cell => {
+    const dayNum = cell.querySelector('.day-num-inner');
+    if(dayNum && parseInt(dayNum.textContent) === member.birthdayDay){
+      targetCell = cell;
+    }
+  });
+  if(!targetCell) return;
+  targetCell.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  targetCell.style.transition = 'box-shadow 0.3s, outline 0.3s';
+  targetCell.style.outline    = '3px solid #f59e0b';
+  targetCell.style.boxShadow  = '0 0 0 6px rgba(245,158,11,0.25)';
+  targetCell.style.zIndex     = '10';
+  targetCell.style.borderRadius = '4px';
+  setTimeout(()=>{
+    targetCell.style.outline    = '';
+    targetCell.style.boxShadow  = '';
+    targetCell.style.zIndex     = '';
+    targetCell.style.borderRadius = '';
+  }, 2500);
+}
+
+// SIDEBAR
+function renderSidebar(){
+  const query=(document.getElementById('search-input')?.value||'').toLowerCase();
+  const list=document.getElementById('member-list'); list.innerHTML='';
+  const allItem=document.getElementById('all-item');
+  if(allItem) allItem.className='all-item'+(selectedMember===null?' selected':'');
+  const sub=document.getElementById('all-sub'); if(sub) sub.textContent=`${MEMBERS.length} members · ${events.length} events`;
+  const filtered=query?MEMBERS.filter(m=>m.name.toLowerCase().includes(query)):MEMBERS;
+  const sorted=[...filtered].sort((a,b)=>{ const au=isBirthdayUrgent(a)?0:1,bu=isBirthdayUrgent(b)?0:1; return au!==bu?au-bu:a.name.localeCompare(b.name); });
+  sorted.forEach(m=>{
+    const item=document.createElement('div'); item.className='member-item'+(selectedMember===m.id?' selected':'');
+    const av=buildAvatar(m,34,'9px');
+    const info=document.createElement('div'); info.className='member-info';
+    const nameDiv=document.createElement('div'); nameDiv.className='name'; nameDiv.textContent=m.name;
+    const bdayDiv=document.createElement('div');
+    const bs=birthdayDateStr(m), cd=birthdayCountdown(m);
+    bdayDiv.className='bday'+(isBirthdayUrgent(m)?' soon':'');
+    bdayDiv.textContent=bs?`🎂 ${bs}${isBirthdayUrgent(m)?' · '+cd:''}` :'🎂 —';
+    info.appendChild(nameDiv); info.appendChild(bdayDiv); item.appendChild(av); item.appendChild(info);
+    if(cd&&(cd.includes('Today')||cd.includes('Tomorrow'))){ const badge=document.createElement('span'); badge.className='upcoming-badge'; badge.textContent=cd.includes('Today')?'🎉 Today':'🎁 Tomorrow'; item.appendChild(badge); }
+    item.addEventListener('click',()=>openBdayPopupAtEl(m,item));
+    list.appendChild(item);
+  });
+}
+function selectAll(){ selectedMember=null; renderAll(); }
+
+// REMINDERS
+function renderRemindersPanel(){
+  const container=document.getElementById('reminder-list'); container.innerHTML='';
+  if(reminders.length===0){ container.innerHTML='<div class="no-reminders">No reminders set</div>'; return; }
+  const sorted=[...reminders].sort((a,b)=>new Date(`${a.remDate}T${a.remTime||'00:00'}`)-new Date(`${b.remDate}T${b.remTime||'00:00'}`));
+  sorted.forEach(r=>{
+    const ev=events.find(e=>e.id===r.eventId);
+    const item=document.createElement('div'); item.className='reminder-item';
+    item.innerHTML=`<div style="font-size:0.9rem;flex-shrink:0;">🔔</div><div class="reminder-text"><strong>${ev?ev.title:'Event'}</strong><span>${r.remDate}${r.remTime?' · '+r.remTime:''}</span></div><div class="reminder-del" onclick="deleteReminder(${r.id})">✕</div>`;
+    container.appendChild(item);
+  });
+}
+
+// CALENDAR
+function renderCalHeader(){ document.getElementById('cal-header').innerHTML=DAY_NAMES.map(d=>`<div>${d}</div>`).join(''); }
+
+function renderCalBody(){
+  const body=document.getElementById('cal-body'); body.innerHTML='';
+  const year=currentDate.getFullYear(), month=currentDate.getMonth();
+  document.getElementById('current-month-label').textContent=`${MONTH_NAMES[month]} ${year}`;
+  const firstDow=new Date(year,month,1).getDay();
+  const startPad=firstDow===0?6:firstDow-1;
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  const daysInPrevMonth=new Date(year,month,0).getDate();
+  const today=todayStr();
+  const visible=selectedMember?events.filter(e=>e.memberId===selectedMember):events;
+  const cells=[];
+  for(let i=startPad-1;i>=0;i--) cells.push({day:daysInPrevMonth-i,month:month-1,year,other:true});
+  for(let d=1;d<=daysInMonth;d++) cells.push({day:d,month,year,other:false});
+  let nd=1; while(cells.length%7!==0) cells.push({day:nd++,month:month+1,year,other:true});
+
+  cells.forEach(cell=>{
+    const dateStr=`${cell.year}-${String(cell.month+1).padStart(2,'0')}-${String(cell.day).padStart(2,'0')}`;
+    const isToday=!cell.other&&dateStr===today;
+    const dayEvts=visible.filter(e=>e.date===dateStr);
+    const bdayMembers=!cell.other?MEMBERS.filter(m=>m.birthdayMonth===cell.month+1&&m.birthdayDay===cell.day):[];
+
+    const cellEl=document.createElement('div');
+    let cls='cal-cell';
+    if(cell.other) cls+=' other-month';
+    if(isToday)    cls+=' today';
+    if(bdayMembers.length) cls+=' birthday-cell';
+    cellEl.className=cls;
+    cellEl.onclick=()=>{ if(!cell.other) openEventModal(dateStr); };
+
+    const numEl=document.createElement('div'); numEl.className='day-num';
+    const inner=document.createElement('div'); inner.className='day-num-inner'; inner.textContent=cell.day;
+    numEl.appendChild(inner); cellEl.appendChild(numEl);
+
+    bdayMembers.forEach(m=>{
+      const pill=document.createElement('div'); pill.className='event-pill birthday-pill';
+      pill.title=`🎂 ${m.name}'s Birthday`; pill.textContent=`🎂 ${m.name.split(' ')[0]}`;
+      pill.onclick=e=>{ e.stopPropagation(); openBdayPopupAtEl(m,pill); };
+      cellEl.appendChild(pill);
+    });
+
+    dayEvts.forEach(ev=>{
+      const hasRem=reminders.some(r=>r.eventId===ev.id);
+      const pill=document.createElement('div');
+      pill.className='event-pill birthday-pill';
+      pill.title=`${ev.title}${ev.time?' @ '+ev.time:''}`;
+      if(hasRem){ const bell=document.createElement('span'); bell.textContent='🔔'; bell.style.fontSize='0.62rem'; pill.appendChild(bell); }
+      const ic=document.createElement('span'); ic.textContent='🎂'; ic.style.fontSize='0.62rem'; pill.appendChild(ic);
+      const txt=document.createElement('span'); txt.textContent=ev.title; pill.appendChild(txt);
+      pill.onclick=e=>{ e.stopPropagation(); openEditEventModal(ev); };
+      cellEl.appendChild(pill);
+    });
+    body.appendChild(cellEl);
+  });
+}
+
+// RENDER ALL
+function renderAll(){
+  renderStats(); renderTeamBar(); renderSidebar();
+  renderCalHeader(); renderCalBody();
+  renderBirthdayCards(); renderRemindersPanel();
+}
+
+// NAVIGATION
+function changeMonth(dir){ currentDate=new Date(currentDate.getFullYear(),currentDate.getMonth()+dir,1); renderAll(); }
+function goToday(){ currentDate=new Date(); renderAll(); }
+
+// BIRTHDAY POPUP
+function openBdayPopupAtEl(member,anchorEl){
+  closeBdayPopup();
+  const popup=document.getElementById('bday-popup');
+  const backdrop=document.getElementById('popup-backdrop');
+  const bs=birthdayDateStr(member), cd=birthdayCountdown(member), age=nextBirthdayAge(member);
+  const avStyle=`width:48px;height:48px;border-radius:13px;background:${memberGradient(member.id)};display:flex;align-items:center;justify-content:center;font-size:0.95rem;font-weight:700;color:white;flex-shrink:0;overflow:hidden;position:relative;`;
+  const avatarContent=photos[member.id]?`<img src="${photos[member.id]}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;border-radius:13px;" />`:member.initials;
+  const bdaySection=bs?`<div class="bday-info-card"><span class="cake">🎂</span><div><div class="bday-date">${bs}${member.birthYear?', '+member.birthYear:''}</div>${age?`<div class="bday-age">Turns ${age} 🎉</div>`:''} ${cd?`<div class="bday-countdown">${cd}</div>`:''}</div></div>`:'<div style="text-align:center;padding:10px 0;font-size:0.8rem;color:var(--text3);">No birthday date set.</div>';
+  popup.className='bday-popup';
+  popup.innerHTML=`
+    <div class="bday-popup-header">
+      <div class="bday-popup-avatar" style="${avStyle}">${avatarContent}</div>
+      <div class="bday-popup-info" style="flex:1;min-width:0;"><div class="pname">${member.name}</div><div class="prole">AR Team</div></div>
+      <div style="cursor:pointer;color:#94a3b8;font-size:0.88rem;align-self:flex-start;padding:2px 4px;" onclick="closeBdayPopup()">✕</div>
+    </div>
+    ${bdaySection}
+    <div class="bday-popup-actions">
+      <button class="btn btn-secondary" onclick="closeBdayPopup();selectedMember=${member.id};renderAll();">📅 Filter</button>
+      <button class="btn btn-secondary" onclick="closeBdayPopup();openPhotoModal(${member.id});">📷 Photo</button>
+      <button class="btn btn-primary"   onclick="closeBdayPopup();openEventModal(null,${member.id});">＋ Event</button>
+    </div>`;
+  popup.style.display='block'; backdrop.style.display='block';
+  requestAnimationFrame(()=>{
+    const rect=anchorEl.getBoundingClientRect();
+    const pw=popup.offsetWidth||272, ph=popup.offsetHeight||260;
+    const vw=window.innerWidth, vh=window.innerHeight;
+    let left=rect.left, top=rect.bottom+8;
+    if(left+pw>vw-12) left=vw-pw-12; if(left<8) left=8;
+    if(top+ph>vh-12)  top=rect.top-ph-8; if(top<8) top=8;
+    popup.style.left=left+'px'; popup.style.top=top+'px';
+  });
+}
+function closeBdayPopup(){ document.getElementById('bday-popup').style.display='none'; document.getElementById('popup-backdrop').style.display='none'; }
+
+// EVENT MODAL
+function populateMemberSelect(selId){ document.getElementById('evt-member').innerHTML=MEMBERS.map(m=>`<option value="${m.id}"${m.id===selId?' selected':''}>${m.name}</option>`).join(''); }
+function toggleReminderFields(){ setTimeout(()=>{ const c=document.getElementById('evt-reminder-check').checked; document.getElementById('reminder-fields').style.display=c?'flex':'none'; },0); }
+
+function openEventModal(dateStr,preselectedMember){
+  editingEventId=null;
+  document.getElementById('event-modal-title').textContent='Add Birthday';
+  document.getElementById('evt-title').value='';
+  document.getElementById('evt-date').value=dateStr||todayStr();
+  document.getElementById('evt-time').value='';
+  document.getElementById('evt-notes').value='';
+  document.getElementById('evt-reminder-check').checked=false;
+  document.getElementById('reminder-fields').style.display='none';
+  document.getElementById('rem-date').value=dateStr||todayStr();
+  document.getElementById('rem-time').value='09:00';
+  document.getElementById('rem-message').value='';
+  document.getElementById('evt-delete-btn').style.display='none';
+  populateMemberSelect(preselectedMember||selectedMember||MEMBERS[0].id);
+  document.getElementById('event-modal-overlay').classList.add('open');
+}
+
+function openEditEventModal(ev){
+  editingEventId=ev.id;
+  document.getElementById('event-modal-title').textContent='Edit Birthday';
+  document.getElementById('evt-title').value=ev.title;
+  document.getElementById('evt-date').value=ev.date;
+  document.getElementById('evt-time').value=ev.time||'';
+  document.getElementById('evt-notes').value=ev.notes||'';
+  document.getElementById('evt-delete-btn').style.display='inline-flex';
+  const rem=reminders.find(r=>r.eventId===ev.id);
+  if(rem){ document.getElementById('evt-reminder-check').checked=true; document.getElementById('reminder-fields').style.display='flex'; document.getElementById('rem-date').value=rem.remDate; document.getElementById('rem-time').value=rem.remTime||'09:00'; document.getElementById('rem-message').value=rem.message||''; }
+  else   { document.getElementById('evt-reminder-check').checked=false; document.getElementById('reminder-fields').style.display='none'; document.getElementById('rem-date').value=ev.date; document.getElementById('rem-time').value='09:00'; document.getElementById('rem-message').value=''; }
+  populateMemberSelect(ev.memberId);
+  document.getElementById('event-modal-overlay').classList.add('open');
+}
+function closeEventModal(){ document.getElementById('event-modal-overlay').classList.remove('open'); }
+
+function saveEvent(){
+  const title=document.getElementById('evt-title').value.trim();
+  const date=document.getElementById('evt-date').value;
+  const time=document.getElementById('evt-time').value;
+  const notes=document.getElementById('evt-notes').value.trim();
+  const memberId=parseInt(document.getElementById('evt-member').value);
+  const type='birthday';
+  const wantRem=document.getElementById('evt-reminder-check').checked;
+  const remDate=document.getElementById('rem-date').value;
+  const remTime=document.getElementById('rem-time').value;
+  const remMsg=document.getElementById('rem-message').value.trim();
+  if(!title||!date){ alert('Please enter a title and date.'); return; }
+  let eventId;
+  if(editingEventId!==null){
+    const ev=events.find(e=>e.id===editingEventId);
+    if(ev) Object.assign(ev,{title,date,time,notes,memberId,type});
+    eventId=editingEventId;
+    reminders=reminders.filter(r=>r.eventId!==eventId);
+  } else {
+    const nid=getNextEventId(); events.push({id:nid,title,date,time,notes,memberId,type}); setNextEventId(nid+1); eventId=nid;
+  }
+  if(wantRem&&remDate){ const rid=getNextRemId(); reminders.push({id:rid,eventId,remDate,remTime,message:remMsg||title}); setNextRemId(rid+1); }
+  ls_set(LS.EVENTS,events); ls_set(LS.REMINDERS,reminders);
+  closeEventModal(); showToast('success','✅',`"${title}" saved!`); renderAll();
+}
+
+function deleteEvent(){
+  if(!editingEventId) return;
+  if(!confirm('Delete this event?')) return;
+  events=events.filter(e=>e.id!==editingEventId);
+  reminders=reminders.filter(r=>r.eventId!==editingEventId);
+  ls_set(LS.EVENTS,events); ls_set(LS.REMINDERS,reminders);
+  closeEventModal(); showToast('info','🗑️','Event deleted.'); renderAll();
+}
+
+function deleteReminder(rid){ reminders=reminders.filter(r=>r.id!==rid); ls_set(LS.REMINDERS,reminders); renderRemindersPanel(); renderCalBody(); }
+
+// PHOTO MODAL
+function openPhotoModal(memberId){
+  photoTargetId=memberId; pendingPhoto=null;
+  const m=MEMBERS.find(x=>x.id===memberId);
+  document.getElementById('photo-modal-title').textContent=`Photo — ${m.name}`;
+  document.getElementById('photo-file-input').value='';
+  const preview=document.getElementById('photo-preview'), txt=document.getElementById('upload-text'), remBtn=document.getElementById('remove-photo-btn');
+  if(photos[memberId]){ preview.src=photos[memberId]; preview.style.display='block'; txt.textContent='📷 Click to change'; remBtn.style.display='inline-flex'; }
+  else { preview.style.display='none'; txt.textContent='📷 Click to select a photo'; remBtn.style.display='none'; }
+  document.getElementById('photo-modal-overlay').classList.add('open');
+}
+function closePhotoModal(){ document.getElementById('photo-modal-overlay').classList.remove('open'); photoTargetId=null; pendingPhoto=null; }
+function handlePhotoUpload(event){
+  const file=event.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{ pendingPhoto=e.target.result; const preview=document.getElementById('photo-preview'); preview.src=pendingPhoto; preview.style.display='block'; document.getElementById('upload-text').textContent='📷 Click to change'; document.getElementById('remove-photo-btn').style.display='inline-flex'; };
+  reader.readAsDataURL(file);
+}
+function savePhoto(){
+  if(!photoTargetId) return;
+  if(pendingPhoto){ photos[photoTargetId]=pendingPhoto; ls_set(LS.PHOTOS,photos); showToast('success','✅',`Photo saved for ${MEMBERS.find(m=>m.id===photoTargetId).name}!`); }
+  closePhotoModal(); renderAll();
+}
+function removePhoto(){
+  if(!photoTargetId) return;
+  delete photos[photoTargetId]; ls_set(LS.PHOTOS,photos); pendingPhoto=null;
+  document.getElementById('photo-preview').style.display='none';
+  document.getElementById('upload-text').textContent='📷 Click to select a photo';
+  document.getElementById('remove-photo-btn').style.display='none';
+  showToast('info','🗑️','Photo removed.'); renderAll();
+}
+
+// TOAST
+function showToast(type,icon,message,duration=4500){
+  const container=document.getElementById('toast-container');
+  const t=document.createElement('div'); t.className=`toast ${type}`;
+  t.innerHTML=`<span class="t-icon">${icon}</span><div class="t-body">${message}</div><span class="t-close" onclick="this.parentElement.remove()">✕</span>`;
+  container.appendChild(t); setTimeout(()=>{ if(t.parentElement) t.remove(); },duration);
+}
+
+// REMINDER + BIRTHDAY CHECKER
+function checkReminders(){
+  const now=new Date(), fired=ls_get(LS.FIRED,[]);
+  reminders.forEach(r=>{
+    if(fired.includes(r.id)) return;
+    const dt=new Date(`${r.remDate}T${r.remTime||'00:00'}`);
+    if(now>=dt){ const ev=events.find(e=>e.id===r.eventId); showToast('info','🔔',`<strong>Reminder:</strong> ${r.message||(ev?ev.title:'Event')}`,8000); fired.push(r.id); ls_set(LS.FIRED,fired); }
+  });
+  MEMBERS.forEach(m=>{
+    if(m.birthdayMonth===now.getMonth()+1&&m.birthdayDay===now.getDate()){
+      const key=`bday_${m.id}_${now.getFullYear()}`;
+      if(!localStorage.getItem(key)){ const age=now.getFullYear()-m.birthYear; showToast('success','🎂',`Today is <strong>${m.name}'s</strong> birthday! 🎉 Turning ${age}!`,10000); localStorage.setItem(key,'1'); }
+    }
+  });
+}
+
+// CLOSE MODALS ON OVERLAY CLICK
+document.getElementById('event-modal-overlay').addEventListener('click',function(e){ if(e.target===this) closeEventModal(); });
+document.getElementById('photo-modal-overlay').addEventListener('click',function(e){ if(e.target===this) closePhotoModal(); });
+
+// INIT
+renderAll();
+checkReminders();
+setInterval(checkReminders,60000);
+</script>
+</body>
+</html>
